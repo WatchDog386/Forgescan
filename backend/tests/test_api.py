@@ -17,6 +17,36 @@ def test_sign_in_needs_password_and_code(client, db):
     assert client.post(f"{API}/auth/refresh").status_code == 200  # the session cookie renews the token
 
 
+def test_with_two_step_on_the_code_is_asked_for_after_the_password(client, db):
+    asked = client.post(f"{API}/auth/login", json={"email": "ann@example.com", "password": PASSWORD})
+    assert asked.status_code == 401 and asked.json()["detail"]["otp_required"] is True
+    wrong = client.post(f"{API}/auth/login", json={"email": "ann@example.com", "password": "wrong-password"})
+    assert wrong.status_code == 401 and isinstance(wrong.json()["detail"], str)  # a wrong password never reveals the second step
+    db.expire_all()
+    assert db.query(User).filter(User.email == "ann@example.com").one().failed_logins == 1  # asking for the code is not a failure
+
+
+def test_password_alone_until_two_step_is_set_up(client, db):
+    ann = db.query(User).filter(User.email == "ann@example.com").one()
+    ann.totp_secret = None
+    db.commit()
+    reply = client.post(f"{API}/auth/login", json={"email": "ann@example.com", "password": PASSWORD})
+    assert reply.status_code == 200 and reply.json()["otp_enabled"] is False
+    analyst = {"Authorization": f"Bearer {reply.json()['access_token']}"}
+
+    setup = client.post(f"{API}/auth/otp/setup", headers=analyst).json()
+    assert setup["uri"].startswith("otpauth://totp/CyberShield")
+    assert client.post(f"{API}/auth/otp/confirm", json={"setup_token": setup["setup_token"], "code": "000000"}, headers=analyst).status_code == 400
+    assert client.post(f"{API}/auth/otp/confirm", json={"setup_token": "forged", "code": "123456"}, headers=analyst).status_code == 400
+    code = pyotp.TOTP(setup["secret"]).now()
+    assert client.post(f"{API}/auth/otp/confirm", json={"setup_token": setup["setup_token"], "code": code}, headers=analyst).status_code == 200
+    assert client.post(f"{API}/auth/otp/setup", headers=analyst).status_code == 409
+
+    assert client.post(f"{API}/auth/login", json={"email": "ann@example.com", "password": PASSWORD}).status_code == 401
+    reply = client.post(f"{API}/auth/login", json={"email": "ann@example.com", "password": PASSWORD, "code": pyotp.TOTP(setup["secret"]).now()})
+    assert reply.status_code == 200 and reply.json()["otp_enabled"] is True
+
+
 def test_account_locks_after_five_failures(client, db):
     for _ in range(5):
         client.post(f"{API}/auth/login", json={"email": "ann@example.com", "password": "wrong-password", "code": "123456"})

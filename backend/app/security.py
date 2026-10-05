@@ -7,7 +7,7 @@ import jwt
 import pyotp
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
@@ -19,6 +19,7 @@ from .models import ROLES, User, utcnow
 _hasher = PasswordHasher()  # Argon2id (NFR-07)
 _bearer = HTTPBearer(auto_error=False)
 MAX_FAILED_LOGINS, LOCKOUT = 5, timedelta(minutes=15)
+TOTP_SETUP_MINUTES = 10  # time to scan the code and confirm it
 ALGORITHM = "HS256"
 
 
@@ -38,19 +39,40 @@ def _fernet() -> Fernet:
     return Fernet(base64.urlsafe_b64encode(key))
 
 
+def encrypt_totp_secret(secret: str) -> str:
+    return _fernet().encrypt(secret.encode()).decode()
+
+
 def new_totp_secret() -> tuple[str, str]:
     """Return (secret to show the user once, encrypted form to store)."""
     secret = pyotp.random_base32()
-    return secret, _fernet().encrypt(secret.encode()).decode()
+    return secret, encrypt_totp_secret(secret)
 
 
-def verify_totp(encrypted_secret: str, code: str) -> bool:
-    secret = _fernet().decrypt(encrypted_secret.encode()).decode()
-    return pyotp.TOTP(secret).verify(code, valid_window=1)
+def code_matches(secret: str, code: str | None) -> bool:
+    return bool(code) and pyotp.TOTP(secret).verify(code, valid_window=1)
+
+
+def verify_totp(encrypted_secret: str, code: str | None) -> bool:
+    return code_matches(_fernet().decrypt(encrypted_secret.encode()).decode(), code)
 
 
 def totp_uri(secret: str, email: str) -> str:
-    return pyotp.TOTP(secret).provisioning_uri(name=email, issuer_name="AI-NIDR")
+    return pyotp.TOTP(secret).provisioning_uri(name=email, issuer_name="CyberShield")
+
+
+def seal_totp_setup(user: User, secret: str) -> str:
+    """Hold a new secret for the confirm step, so nothing is stored until the user proves their app works."""
+    return _fernet().encrypt(f"{user.user_id}:{secret}".encode()).decode()
+
+
+def open_totp_setup(user: User, sealed: str) -> str | None:
+    """The secret from seal_totp_setup, or None if it is not this user's or older than TOTP_SETUP_MINUTES."""
+    try:
+        owner, secret = _fernet().decrypt(sealed.encode(), ttl=TOTP_SETUP_MINUTES * 60).decode().split(":", 1)
+    except (InvalidToken, ValueError):
+        return None
+    return secret if owner == str(user.user_id) else None
 
 
 def hash_key(key: str) -> str:

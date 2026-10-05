@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from app import security  # noqa: E402
 from app.database import Base, SessionLocal, engine  # noqa: E402
 from app.engine import simulate  # noqa: E402
+from app.limits import limiter  # noqa: E402
 from app.main import create_app  # noqa: E402
 from app.models import Sensor, User  # noqa: E402
 from app.response.firewall import Firewall, FirewallError  # noqa: E402
@@ -72,6 +73,7 @@ def firewall():
 
 @pytest.fixture
 def client(db, firewall):
+    limiter.hits.clear()  # every test starts with a fresh request limit, as a new minute would
     with TestClient(create_app(firewall)) as test_client:
         yield test_client
 

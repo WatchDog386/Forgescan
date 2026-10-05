@@ -2,6 +2,8 @@
 
     python -m app.cli init-db
     python -m app.cli create-user --name "Felix Ochieng" --email felix@example.com --role administrator
+    python -m app.cli create-user --name "Felix Ochieng" --email felix@example.com --role administrator --no-otp
+    python -m app.cli reset-otp --email felix@example.com
     python -m app.cli create-sensor --name lab-sensor
     python -m app.cli bootstrap-model
 """
@@ -24,6 +26,9 @@ def main() -> None:
     user.add_argument("--email", required=True)
     user.add_argument("--role", required=True, choices=ROLES)
     user.add_argument("--password", help="asked for if left out")
+    user.add_argument("--no-otp", action="store_true", help="sign in with the password alone until the user sets up an authenticator app")
+    reset = commands.add_parser("reset-otp", help="switch off two-step sign-in for a user who lost their authenticator app")
+    reset.add_argument("--email", required=True)
     sensor = commands.add_parser("create-sensor", help="register a sensor and show its key")
     sensor.add_argument("--name", required=True)
     model = commands.add_parser("bootstrap-model", help="train a first model on simulated traffic")
@@ -41,15 +46,26 @@ def main() -> None:
         email = args.email.strip().lower()
         if db.query(User).filter(User.email == email).first():
             raise SystemExit("A user with that email already exists.")
-        secret, encrypted = security.new_totp_secret()
+        secret, encrypted = (None, None) if args.no_otp else security.new_totp_secret()
         new = User(name=args.name.strip(), email=email, role=args.role, password_hash=security.hash_password(password), totp_secret=encrypted)
         db.add(new)
         db.flush()
-        audit.record(db, "user.create", None, user_id_created=new.user_id, role=args.role)
+        audit.record(db, "user.create", None, user_id_created=new.user_id, role=args.role, two_step=not args.no_otp)
         db.commit()
         print(f"Created {args.role} {email}.")
-        print("Add this secret to an authenticator app now. It is not shown again:")
-        print(f"  secret: {secret}\n  link:   {security.totp_uri(secret, email)}")
+        if args.no_otp:
+            print("Two-step sign-in is off: sign in with the password, then set up an authenticator app from the dashboard.")
+        else:
+            print("Add this secret to an authenticator app now. It is not shown again:")
+            print(f"  secret: {secret}\n  link:   {security.totp_uri(secret, email)}")
+    elif args.command == "reset-otp":
+        user = db.query(User).filter(User.email == args.email.strip().lower()).first()
+        if user is None:
+            raise SystemExit("There is no user with that email.")
+        user.totp_secret = None
+        audit.record(db, "otp.reset", None, user_id_reset=user.user_id)
+        db.commit()
+        print(f"Two-step sign-in is off for {user.email}. They sign in with the password and can set it up again from the dashboard.")
     elif args.command == "create-sensor":
         key = secrets.token_urlsafe(32)
         db.add(Sensor(name=args.name, key_hash=security.hash_key(key), network=get_settings().monitored_network))
