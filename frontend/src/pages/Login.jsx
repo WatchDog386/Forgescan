@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { login } from "../api.js";
-import { Badge, Wordmark } from "../brand.jsx";
 import Icon from "../icons.jsx";
 
 // Faint pixel clouds on either side of the sign-in panel, drawn once per screen size.
@@ -99,11 +98,6 @@ export default function Login({ notice, onSignedIn }) {
     <div className="gate">
       <PixelField />
       <div className="gate-center">
-        <div className="gate-brand">
-          <Badge size={54} />
-          <Wordmark tagline="AI-powered network intrusion detection and response" />
-        </div>
-
         <div className="gate-frame">
           <Trace corner="tl" /><Trace corner="tr" /><Trace corner="bl" /><Trace corner="br" />
           <form className="gate-card" onSubmit={submit}>
@@ -149,7 +143,6 @@ export default function Login({ notice, onSignedIn }) {
             </details>
           </form>
         </div>
-        <p className="gate-foot">CyberShield · AI-NIDR · KCA University</p>
       </div>
     </div>
   );

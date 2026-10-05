@@ -396,10 +396,6 @@ button.wide { width: 100%; min-height: 44px; font-size: 14.5px; }
 }
 .gate-pixels { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.75; filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.45)); }
 .gate-center { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; padding: 40px 16px; }
-.gate-brand { display: flex; align-items: center; gap: 14px; color: #f3f5f8; }
-.gate-brand .wordmark-name { font-size: 28px; }
-.gate-brand small { color: #8b93a3; font-size: 12px; }
-.gate-brand .logo-tile { box-shadow: 0 0 0 1px rgba(147, 197, 253, 0.35), 0 0 24px rgba(59, 130, 246, 0.45); }
 
 .gate-frame { position: relative; width: 100%; max-width: 400px; }
 .gate-frame::before, .gate-frame::after {
@@ -451,111 +447,61 @@ button.wide { width: 100%; min-height: 44px; font-size: 14.5px; }
 .gate-help summary { cursor: pointer; color: #93c5fd; font-weight: 600; text-align: center; }
 .gate-help p { margin: 8px 0; }
 .gate-help pre { margin: 8px 0; padding: 9px; white-space: pre-wrap; overflow-wrap: anywhere; font: 11.5px/1.5 var(--font-mono); color: #dbe4f3; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 8px; }
-.gate-foot { margin: 0; font-size: 12px; letter-spacing: 0.04em; color: rgba(160, 170, 190, 0.5); }
 
-/* ---------- Opening splash: a film-style security boot (src/Splash.jsx), ending in a fade to black like Kali's ---------- */
-.boot { position: fixed; inset: 0; z-index: 1000; overflow: hidden; display: grid; place-items: center; user-select: none; cursor: default;
-  background: radial-gradient(ellipse at 50% 45%, #121419 0%, #08090b 55%, #020203 100%); }
-.boot-scene { display: flex; flex-direction: column; align-items: center; }
+/* ---------- Opening splash: the shield in a turning ring on white; ends like Kali's boot screen, fading out onto the app ---------- */
+.boot {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  user-select: none; cursor: default;
+  background: radial-gradient(ellipse at 50% 45%, #ffffff 0%, #f8fafd 55%, #eef2f8 100%);
+}
+.boot-stage { position: relative; display: grid; place-items: center; width: 250px; height: 250px; }
+.boot-stage::before { /* a dial of ticks turning the other way */
+  content: ""; position: absolute; inset: -14px; border-radius: 50%; opacity: 0;
+  background: repeating-conic-gradient(rgba(37, 99, 235, 0.45) 0 0.8deg, transparent 0.8deg 6deg);
+  -webkit-mask: radial-gradient(circle, transparent 66%, #000 67%, #000 70%, transparent 71%);
+  mask: radial-gradient(circle, transparent 66%, #000 67%, #000 70%, transparent 71%);
+  animation: fade-in 0.8s 0.5s forwards, spin 18s linear infinite reverse;
+}
+.boot-stage::after { /* the glow round the ring, breathing while it loads */
+  content: ""; position: absolute; inset: 22%; border-radius: 50%; opacity: 0; pointer-events: none;
+  box-shadow: 0 0 60px 18px rgba(37, 99, 235, 0.1), inset 0 0 40px rgba(37, 99, 235, 0.08);
+  animation: fade-in 1.2s 0.3s forwards, breathe-glow 2.6s 1.5s ease-in-out infinite;
+}
+.boot-ring {
+  position: absolute; inset: 0; border-radius: 50%; opacity: 0; transform: scale(0.88);
+  background: conic-gradient(from 0deg, #edf1f7 0deg, #1d4ed8 38deg, #e2e8f1 80deg, #cbd5e3 150deg, #e2e8f1 200deg, #3b82f6 248deg, #93c5fd 256deg, #edf1f7 300deg, #edf1f7 360deg);
+  -webkit-mask: radial-gradient(circle, transparent 58%, #000 59.5%, #000 69%, transparent 70.5%);
+  mask: radial-gradient(circle, transparent 58%, #000 59.5%, #000 69%, transparent 70.5%);
+  animation: ring-in 1s 0.15s cubic-bezier(0.2, 0.7, 0.2, 1) forwards, spin 7s linear infinite;
+}
+.boot-logo { position: relative; width: 128px; height: 128px; opacity: 0; transform: scale(0.8); filter: blur(10px);
+  animation: logo-in 0.9s 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
+.boot-logo img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.35));
+  animation: breathe 2.6s 1.5s ease-in-out infinite; }
+.boot-shine {
+  position: absolute; inset: 0; mix-blend-mode: screen;
+  -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.9) 50%, transparent 62%) no-repeat;
+  background-size: 260% 100%; background-position: 130% 0;
+  animation: shine 3.4s 1.05s ease-in-out infinite;
+}
 
-/* Screen-wide HUD: one scan line down the screen, brackets in the corners */
-.boot-scan { position: absolute; top: 0; left: 0; right: 0; height: 2px; opacity: 0;
-  background: linear-gradient(90deg, transparent, #60a5fa 20%, #bfdbfe 50%, #60a5fa 80%, transparent);
-  box-shadow: 0 0 18px 4px rgba(59, 130, 246, 0.55);
-  animation: scan-down 1.3s 0.15s cubic-bezier(0.5, 0, 0.5, 1) forwards; }
-.boot-corner { position: absolute; width: 46px; height: 46px; border: 0 solid rgba(96, 165, 250, 0.7); opacity: 0; animation: corner-in 0.6s 0.4s ease-out forwards; }
-.boot-corner.tl { top: 28px; left: 28px; border-top-width: 2px; border-left-width: 2px; transform-origin: top left; }
-.boot-corner.tr { top: 28px; right: 28px; border-top-width: 2px; border-right-width: 2px; transform-origin: top right; }
-.boot-corner.bl { bottom: 28px; left: 28px; border-bottom-width: 2px; border-left-width: 2px; transform-origin: bottom left; }
-.boot-corner.br { bottom: 28px; right: 28px; border-bottom-width: 2px; border-right-width: 2px; transform-origin: bottom right; }
-
-/* The HUD round the badge: rings that draw themselves and turn, a radar sweep, a crosshair */
-.boot-hud { position: relative; width: min(420px, 88vw); aspect-ratio: 1; }
-.boot-rings, .boot-cover { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; }
-.boot-rings *, .boot-cover * { vector-effect: non-scaling-stroke; }
-.ring-draw { stroke: rgba(96, 165, 250, 0.35); stroke-width: 1; stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw 1.4s 0.6s cubic-bezier(0.6, 0, 0.2, 1) forwards; }
-.ring-draw.r2 { stroke: rgba(96, 165, 250, 0.85); stroke-width: 2.5; filter: drop-shadow(0 0 6px #3b82f6); animation-delay: 0.9s; }
-.ring-arcs { stroke: #3b82f6; stroke-width: 5; stroke-dasharray: 9 4.5 2 9.5; opacity: 0; filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.8)); animation: fade-in 0.8s 1.2s forwards; }
-.ring-ticks { stroke: rgba(147, 197, 253, 0.55); stroke-width: 7; stroke-dasharray: 0.6 5.4; opacity: 0; animation: fade-in 0.8s 1.4s forwards; }
-.ring-split { stroke: rgba(96, 165, 250, 0.6); stroke-width: 1.5; stroke-dasharray: 30 3 10 7; opacity: 0; animation: fade-in 0.8s 1.6s forwards; }
-.spin { animation: spin 14s linear infinite; }
-.spin.ccw { animation-duration: 22s; animation-direction: reverse; }
-.spin.slow { animation-duration: 30s; }
-.crosshair { opacity: 0; animation: fade-in 0.6s 1.8s forwards; }
-.crosshair path { stroke: rgba(96, 165, 250, 0.55); stroke-width: 1; }
-.boot-radar { position: absolute; inset: 15%; border-radius: 50%; opacity: 0;
-  background: conic-gradient(from 0deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0) 70deg, transparent 360deg);
-  -webkit-mask: radial-gradient(circle, transparent 52%, #000 60%); mask: radial-gradient(circle, transparent 52%, #000 60%);
-  animation: fade-in 0.8s 1.3s forwards, spin 3.6s linear infinite; }
-
-/* The badge: rebuilt from slices sliding into place, scanned by a beam, then locked with a flash */
-.boot-shield { position: absolute; left: 33%; top: 33%; width: 34%; height: 34%; filter: drop-shadow(0 0 14px rgba(59, 130, 246, 0.55));
-  animation: breathe 2.6s 6s ease-in-out infinite; }
-.boot-shield img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transform: translateX(var(--from));
-  filter: brightness(2.2) saturate(0.4);
-  animation: strip-in 0.9s var(--delay) cubic-bezier(0.2, 0.8, 0.2, 1) forwards, lock 0.7s 5.2s ease-out forwards; }
-.boot-beam { position: absolute; left: -8%; right: -8%; top: 0; height: 2px; opacity: 0;
-  background: linear-gradient(90deg, transparent, #bfdbfe, transparent); box-shadow: 0 0 12px 2px rgba(96, 165, 250, 0.7);
-  animation: beam 2.2s 3s ease-in-out infinite; }
-.boot-pulse { position: absolute; inset: 30%; border-radius: 50%; border: 2px solid rgba(147, 197, 253, 0.8); opacity: 0;
-  animation: pulse 1.2s 5.25s ease-out forwards, pulse 1.4s 7.75s ease-out forwards; }
-
-/* The armoured cover over the badge, opening slowly in segments; targeting brackets close in */
-.wedge { fill: #101319; stroke: rgba(96, 165, 250, 0.75); stroke-width: 1.2; opacity: 0;
-  animation: fade-in 0.5s 1.7s forwards, wedge-open 2.4s var(--delay) cubic-bezier(0.65, 0, 0.35, 1) forwards; }
-.hub { fill: #0b0d11; stroke: #60a5fa; stroke-width: 1.5; opacity: 0; animation: fade-in 0.5s 1.7s forwards, hub-out 0.5s 2.55s forwards; }
-.reticle { opacity: 0; animation: reticle-lock 0.8s 4.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, blink 0.4s 5.3s 2; }
-.reticle path { stroke: #93c5fd; stroke-width: 2; }
-
-/* The name, decrypted letter by letter */
-.boot-name { display: flex; margin-top: 4px; min-height: 1.25em; color: #f3f5f8; font-size: clamp(30px, 7vw, 44px); line-height: 1.15;
-  animation: glitch 0.45s 7.75s steps(3) 1; }
-.slot { position: relative; display: inline-block; }
-.slot .final { visibility: hidden; }
-.slot.done .final { visibility: visible; animation: settle 0.35s ease-out; }
-.slot.light .final { font: 300 1em/1.15 var(--font-head); letter-spacing: -0.01em; }
-.slot.heavy .final { font: 900 1.04em/1.15 "Playfair Display", Georgia, serif; }
-.slot .glyph { position: absolute; inset: 0; display: grid; place-items: center; font: 500 0.62em/1 var(--font-mono); color: #60a5fa; text-shadow: 0 0 10px rgba(59, 130, 246, 0.9); }
-.boot-underline { display: block; width: min(300px, 70vw); height: 2px; margin-top: 12px; transform: scaleX(0);
-  background: linear-gradient(90deg, transparent, #3b82f6 20%, #bfdbfe 50%, #3b82f6 80%, transparent); box-shadow: 0 0 12px rgba(59, 130, 246, 0.8);
-  animation: underline 0.8s 7.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-
-/* The ending, as Kali's boot screen does it: everything fades to black, then the dark lifts onto the app */
-.boot.leaving .boot-scene, .boot.leaving .boot-corner { animation: fade-out 0.6s ease-in forwards; }
+/* The ending, as Kali's boot screen does it: the logo fades out, then the white lifts onto the app. No zoom. */
+.boot.leaving .boot-stage { animation: fade-out 0.6s ease-in forwards; }
 .boot.leaving { animation: fade-out 0.6s 0.7s ease-out forwards; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fade-in { to { opacity: 1; } }
 @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
-@keyframes scan-down { 0% { opacity: 0; transform: translateY(0); } 10%, 90% { opacity: 1; } 100% { opacity: 0; transform: translateY(100vh); } }
-@keyframes corner-in { from { opacity: 0; transform: scale(1.6); } to { opacity: 1; transform: scale(1); } }
-@keyframes draw { to { stroke-dashoffset: 0; } }
-@keyframes strip-in { 60% { opacity: 1; } to { opacity: 1; transform: translateX(0); filter: brightness(1.15) saturate(1); } }
-@keyframes lock { 0% { filter: brightness(1.15); } 25% { filter: brightness(2.6) saturate(0.6); } 100% { filter: brightness(1.2); } }
-@keyframes breathe { 50% { filter: drop-shadow(0 0 28px rgba(96, 165, 250, 0.95)); } }
-@keyframes beam { 0% { top: 0; opacity: 0; } 10%, 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-@keyframes pulse { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(2.3); } }
-@keyframes wedge-open { 0% { opacity: 1; transform: translate(0, 0); } 80% { opacity: 0.9; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
-@keyframes hub-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.2); } }
-@keyframes reticle-lock { 0% { opacity: 0; transform: scale(1.6) rotate(45deg); } 70% { opacity: 1; } 100% { opacity: 1; transform: scale(1) rotate(0deg); } }
-@keyframes blink { 50% { opacity: 0.2; } }
-@keyframes settle { from { color: #93c5fd; text-shadow: 0 0 14px rgba(96, 165, 250, 0.95); } }
-@keyframes glitch {
-  0% { text-shadow: 2px 0 rgba(239, 68, 68, 0.7), -2px 0 rgba(59, 130, 246, 0.8); transform: translateX(1px); }
-  35% { text-shadow: -3px 0 rgba(239, 68, 68, 0.7), 3px 0 rgba(59, 130, 246, 0.8); transform: translateX(-2px) skewX(-6deg); }
-  70% { clip-path: inset(30% 0 40% 0); transform: translateX(3px); }
-  100% { text-shadow: none; transform: none; clip-path: inset(0); }
-}
-@keyframes underline { to { transform: scaleX(1); } }
+@keyframes ring-in { to { opacity: 1; transform: scale(1); } }
+@keyframes logo-in { to { opacity: 1; transform: scale(1); filter: blur(0); } }
+@keyframes breathe { 50% { filter: brightness(1.1) drop-shadow(0 0 20px rgba(59, 130, 246, 0.6)); } }
+@keyframes breathe-glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@keyframes shine { 0% { background-position: 130% 0; } 32%, 100% { background-position: -30% 0; } }
 
 /* Reduced motion: the finished picture, briefly, then a quick fade */
-.boot.still * { animation: none !important; }
-.boot.still .wedge, .boot.still .hub, .boot.still .boot-scan, .boot.still .boot-pulse, .boot.still .boot-beam { display: none; }
-.boot.still .boot-shield img { opacity: 1; transform: none; filter: brightness(1.15); }
-.boot.still .ring-draw { stroke-dashoffset: 0; }
-.boot.still .ring-arcs, .boot.still .ring-ticks, .boot.still .ring-split, .boot.still .crosshair, .boot.still .reticle, .boot.still .boot-corner { opacity: 1; transform: none; }
-.boot.still .boot-radar { opacity: 0.6; }
-.boot.still .boot-underline { transform: none; }
+.boot.still *, .boot.still .boot-stage::before, .boot.still .boot-stage::after { animation: none !important; opacity: 1; transform: none; filter: none; }
 .boot.still.leaving { animation: fade-out 0.3s forwards; }
 
 /* ---------- Sign-in security page ---------- */
@@ -616,7 +562,5 @@ button.wide { width: 100%; min-height: 44px; font-size: 14.5px; }
   .toolbar .field { min-width: 0; flex: 1 1 140px; }
   .bar-row { grid-template-columns: minmax(96px, 40%) 1fr 34px; gap: 10px; }
   .gate-card { padding: 22px 20px 18px; }
-  .gate-brand .wordmark-name { font-size: 23px; }
-  .gate-brand small { display: none; }
   .sidebar-foot .live { display: none; }
 }

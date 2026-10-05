@@ -41,14 +41,14 @@ The dashboard carries the **CyberShield** name and shield badge (`src/assets/`, 
 badge sits on a white tile so its blue keeps its colours on dark backgrounds. The wordmark pairs Poppins
 Light ("Cyber") with Playfair Display Black ("Shield"), as in the logo.
 
-The app opens with a film-style security boot of about ten seconds (`src/Splash.jsx`): HUD rings draw
-themselves round the badge, an armoured cover splits open in slow segments while the shield rebuilds in
-slices, targeting brackets lock on, and the name decrypts letter by letter. It ends as Kali Linux's boot
-screen does, fading to black and then into the app. A click or key press skips it.
+The app opens with a splash of about ten seconds on white (`src/Splash.jsx`): the shield glows in inside a
+turning ring. It ends as Kali Linux's boot screen does, the logo fading out and then the app fading in. A click
+or key press skips it.
 
 The sign-in page is a glowing panel on a dark charcoal background, with faint pixel clouds, traces and
-brackets drawn in code (`src/pages/Login.jsx`) so it stays sharp at any size. The console takes its cues from Wiz, a security
-console often praised for its UI: a light page with a deep navy sidebar, one blue accent, DM Sans for text,
+brackets drawn in code (`src/pages/Login.jsx`) so it stays sharp at any size.
+
+The console takes its cues from Wiz, a security console often praised for its UI: a light page with a deep navy sidebar, one blue accent, DM Sans for text,
 Poppins for headings and JetBrains Mono for addresses. All fonts are bundled through `@fontsource`, so they
 work in a laboratory with no internet. The theme follows the system setting; the button at the bottom of
 the sidebar switches between system, light and dark. Severity colours were checked for colour-blind
