@@ -1,0 +1,28 @@
+# AI-NIDR backend. Needs Python 3.12 or newer.
+# Versions are the ones the project was built and tested with.
+
+# API
+fastapi==0.142.2
+uvicorn[standard]==0.54.0
+pydantic-settings==2.15.0
+email-validator==2.3.0
+
+# Database (SQLite needs nothing extra; psycopg is the PostgreSQL driver)
+SQLAlchemy==2.1.3
+psycopg[binary]==3.3.6
+
+# Security
+argon2-cffi==25.1.0
+PyJWT==2.15.1
+pyotp==2.10.0
+cryptography==50.0.2
+
+# Detection
+numpy==2.5.3
+pandas==3.0.6
+scikit-learn==1.9.1
+joblib==1.6.0
+xgboost==3.4.1
+
+# Sensor collector and traffic simulator
+httpx==0.28.1

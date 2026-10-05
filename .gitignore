@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Secrets and local settings
+.env
+
+# Local database, logs and packet captures (never commit captured traffic)
+data/*
+!data/.gitkeep
+*.pcap
+*.pcapng
+
+# Trained models are generated; keep them out of git
+models/*
+!models/.gitkeep
+
+# Node (dashboard, added later)
+node_modules/
+dist/
+
+# Editors and OS
+.idea/
+Thumbs.db
+.DS_Store
